@@ -1,0 +1,204 @@
+---
+title: "Harvard Social Science Enrollment"
+author: "Andres de Loera-Brust"
+date: "April 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#I begin as always by loading the libraries I will use throughout the project
+library(readxl)
+library(janitor)
+library(tidyverse)
+
+```
+
+
+```{r data, echo = FALSE}
+
+#Now I load in the enrollment data for the past three years collapse each dataset to a single row with the total undergraduate enrollment in various social science courses in the given year.
+#I begin with the current data for 2019.
+
+#First I download the file from the Harvard registrars website.
+
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx",
+              dest = "enroll_2019.xlsx",
+              mode = "wb")
+
+#Next I read the xlsx file into r and manipulate the data to get just undergraduate economics enrollment.
+#I add a skip argument to account for the format of the file. 
+
+s_enroll_2019 <- read_excel("enroll_2019.xlsx", skip = 3) %>% 
+  
+  #I call clean names to get more workable column titles.
+  
+  clean_names() %>%
+  
+  #Now I collapse by course department and get the total undergraduate enrollment for each. 
+  
+  group_by(course_department) %>%
+  summarize(undergrads = sum(u_grad)) %>%
+  ungroup() %>%
+  
+  #Now I add a variable to recognize the year of the data and another to recognize the term.
+  #I also create an accounting variable to use to make the graphic.
+  
+  mutate(year = 2019, term = "Spring", semester = 8) %>%
+  
+  #Finally I select just the row for the economics department
+  filter(course_department %in% c("Economics", "History", "Government", "Sociology", "Social Studies"))
+
+
+#I now repeat the same process for each of the prior seven semesters:
+
+
+#For Spring 2018:
+
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_03.06.18.xlsx",
+              dest = "s_enroll_2018.xlsx",
+              mode = "wb")
+s_enroll_2018 <- read_excel("s_enroll_2018.xlsx", skip = 3) %>% 
+  clean_names() %>%
+  group_by(course_department) %>%
+  summarize(undergrads = sum(u_grad)) %>%
+  ungroup() %>%
+  mutate(year = 2018, term = "Spring", semester = 7) %>%
+  filter(course_department %in% c("Economics", "History", "Government", "Sociology", "Social Studies"))
+
+#Fall 2018
+
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_10.24.18.xlsx",
+              dest = "f_enroll_2018.xlsx",
+              mode = "wb")
+f_enroll_2018 <- read_excel("f_enroll_2018.xlsx", skip = 2) %>% 
+  clean_names() %>%
+  group_by(course_department) %>%
+  summarize(undergrads = sum(u_grad)) %>%
+  ungroup() %>%
+  mutate(year = 2018, term = "Fall", semester = 6) %>%
+  filter(course_department %in% c("Economics", "History", "Government", "Sociology", "Social Studies"))
+
+#Spring 2017:
+
+download.file(url = "http://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_2017_03_07_final_0.xlsx",
+              dest = "s_enroll_2017.xlsx",
+              mode = "wb")
+s_enroll_2017 <- read_excel("s_enroll_2017.xlsx", skip = 3) %>% 
+  clean_names() %>%
+  group_by(course_department) %>%
+  summarize(undergrads = sum(u_grad)) %>%
+  ungroup() %>%
+  mutate(year = 2017, term = "Spring", semester = 5) %>%
+  filter(course_department %in% c("Economics", "History", "Government", "Sociology", "Social Studies"))
+
+#Fall 2017
+
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_10.20.17.xlsx",
+              dest = "f_enroll_2017.xlsx",
+              mode = "wb")
+f_enroll_2017 <- read_excel("f_enroll_2017.xlsx", skip = 3) %>% 
+  clean_names() %>%
+  group_by(course_department) %>%
+  summarize(undergrads = sum(u_grad)) %>%
+  ungroup() %>%
+  mutate(year = 2017, term = "Fall", semester = 4) %>%
+  filter(course_department %in% c("Economics", "History", "Government", "Sociology", "Social Studies"))
+
+#Spring 2016
+
+download.file(url = "http://registrar.fas.harvard.edu/files/fas-registrar/files/course_enrollment_statistics_0.xlsx",
+              dest = "s_enroll_2016.xlsx",
+              mode = "wb")
+s_enroll_2016 <- read_excel("s_enroll_2016.xlsx") %>% 
+  clean_names() %>%
+  mutate(hcol = replace_na(hcol, 0)) %>%
+  group_by(department) %>%
+  summarize(undergrads = sum(hcol)) %>%
+  ungroup() %>%
+  mutate(year = 2016, term = "Spring", semester = 3) %>%
+  filter(department %in% c("ECON", "HIST", "GOVM", "SOCL", "SOST")) %>%
+  mutate(course_department = fct_recode(department, "Economics" = "ECON", "History" = "HIST", "Government" = "GOVM", "Sociology" = "SOCL", "Social Studies" = "SOST")) %>%
+  select(course_department, undergrads, year, term, semester)
+
+#Fall 2016
+
+download.file(url = "http://registrar.fas.harvard.edu/files/fas-registrar/files/copy_of_class_enrollment_summary_by_term_10.06.2016.xlsx",
+              dest = "f_enroll_2016.xlsx",
+              mode = "wb")
+f_enroll_2016 <- read_excel("f_enroll_2016.xlsx", skip = 3) %>% 
+  clean_names() %>%
+  group_by(course_department) %>%
+  summarize(undergrads = sum(u_grad)) %>%
+  ungroup() %>%
+  mutate(year = 2016, term = "Fall", semester = 2) %>%
+  filter(course_department %in% c("Economics", "History", "Government", "Sociology", "Social Studies"))
+
+#Fall 2015
+
+download.file(url = "http://webdocs.registrar.fas.harvard.edu/reports/statistics/Fall_2015/CourseEnrollmentStatistics.xlsx",
+              dest = "f_enroll_2015.xlsx",
+              mode = "wb")
+f_enroll_2015 <- read_excel("f_enroll_2015.xlsx") %>% 
+  clean_names() %>%
+  mutate(hcol = replace_na(hcol, 0)) %>%
+  group_by(department) %>%
+  summarize(undergrads = sum(hcol)) %>%
+  ungroup() %>%
+  mutate(year = 2015, term = "Fall", semester = 1) %>%
+  filter(department %in% c("ECON", "HIST", "GOVM", "SOCL", "SOST")) %>%
+  mutate(course_department = fct_recode(department, "Economics" = "ECON", "History" = "HIST", "Government" = "GOVM", "Sociology" = "SOCL", "Social Studies" = "SOST")) %>%
+  select(course_department, undergrads, year, term, semester)
+
+
+
+#Now I append the all the datasets into a master enrollment file with data from the past 8 semesters.
+
+enroll_master <- rbind(s_enroll_2019, f_enroll_2018, s_enroll_2018, f_enroll_2017, s_enroll_2017, f_enroll_2016, s_enroll_2016, f_enroll_2015)
+
+```
+
+
+```{r plot, echo = FALSE, cache = TRUE}
+
+#Having finally made a file of the format I want, I will create a graphic showing the enrollment trends in these five departments over time:
+
+#I start by calling ggplot and setting the basic paramenters: the x axis will be the semester, the y axis will be undergraduate enrollment, and I will color by department.
+
+enroll_master %>%
+  ggplot(aes(x = semester, y = undergrads, color = course_department)) +
+  
+  #Next I add the two layers of the plot: first a scatterplot layer showing the actual enrollment
+  #and second a linear regression through the points to show the average trend.
+  
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  
+  #I manually set the color scale to colors I like.
+  
+  scale_color_manual(values = c("#009E73", "#E69F00", "#F0E442", "#56B4E9", "#0072B2")) +
+  
+  #I add some titles to describe the chart and key takeaways, as well as acknowledge the source of the data.
+  #I also remove the x axis label, as it is unnecessary, and make the y axis more informative. 
+  
+  labs(x = NULL,
+       y = "Total Undergraduate Enrollment in Department Courses",
+       title = "Harvard College Enrollment in Various Social Science Departments",
+       subtitle = "Most departments held steady over the past 8 semesters, Government dipped",
+       caption = "Data from the Harvard Registrar") +
+  
+  #Since I am using my accouting variable as the x axis, I relabel it here to the names of each semester.
+  
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8), 
+                   labels = c("Fall 2015", "Spring 2016", "Fall 2016", "Spring 2017", "Fall 2017", "Spring 2018", "Fall 2018", "Spring 2019")) +
+  
+  #Next I call theme to change the size of the x axis text, and change the background.
+  #I also call theme_minimal to clean up the plot further.
+  
+  theme(axis.text.x= element_text(size = 12),
+        strip.background = element_blank(),
+        strip.text.y = element_blank()) +
+  theme_minimal()
+
+```
